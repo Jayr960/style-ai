@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Upload, Shirt, X } from "lucide-react";
+import { Plus, Upload, Shirt, X, Sparkles } from "lucide-react";
 import GlassCard from "@/components/GlassCard";
 import GradientButton from "@/components/GradientButton";
 import { Badge } from "@/components/ui/badge";
