@@ -124,7 +124,4 @@ const Wardrobe = () => {
   );
 };
 
-// Fix missing import
-import { Sparkles } from "lucide-react";
-
 export default Wardrobe;
