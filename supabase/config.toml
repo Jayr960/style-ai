@@ -1,1 +1,7 @@
 project_id = "zqkdnaorplrwfsrftkqp"
+
+[functions.analyze-clothing]
+verify_jwt = false
+
+[functions.get-weather]
+verify_jwt = false
