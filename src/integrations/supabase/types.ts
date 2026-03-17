@@ -14,7 +14,126 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      outfits: {
+        Row: {
+          created_at: string
+          date: string | null
+          id: string
+          items: Json
+          occasion: string | null
+          outfit_name: string | null
+          reasoning: string | null
+          saved: boolean
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string | null
+          id?: string
+          items?: Json
+          occasion?: string | null
+          outfit_name?: string | null
+          reasoning?: string | null
+          saved?: boolean
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string | null
+          id?: string
+          items?: Json
+          occasion?: string | null
+          outfit_name?: string | null
+          reasoning?: string | null
+          saved?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_preferences: {
+        Row: {
+          city_name: string | null
+          created_at: string
+          id: string
+          location_lat: number | null
+          location_lng: number | null
+          occasions: string[] | null
+          onboarding_completed: boolean
+          preferred_colors: string[] | null
+          style_vibes: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          city_name?: string | null
+          created_at?: string
+          id?: string
+          location_lat?: number | null
+          location_lng?: number | null
+          occasions?: string[] | null
+          onboarding_completed?: boolean
+          preferred_colors?: string[] | null
+          style_vibes?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          city_name?: string | null
+          created_at?: string
+          id?: string
+          location_lat?: number | null
+          location_lng?: number | null
+          occasions?: string[] | null
+          onboarding_completed?: boolean
+          preferred_colors?: string[] | null
+          style_vibes?: string[] | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      wardrobe_items: {
+        Row: {
+          ai_analysis: Json | null
+          color: string | null
+          created_at: string
+          id: string
+          image_url: string
+          item_type: string | null
+          pattern: string | null
+          season: string[] | null
+          style: string | null
+          tags: string[] | null
+          user_id: string
+        }
+        Insert: {
+          ai_analysis?: Json | null
+          color?: string | null
+          created_at?: string
+          id?: string
+          image_url: string
+          item_type?: string | null
+          pattern?: string | null
+          season?: string[] | null
+          style?: string | null
+          tags?: string[] | null
+          user_id: string
+        }
+        Update: {
+          ai_analysis?: Json | null
+          color?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string
+          item_type?: string | null
+          pattern?: string | null
+          season?: string[] | null
+          style?: string | null
+          tags?: string[] | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
