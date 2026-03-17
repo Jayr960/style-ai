@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Cloud, Thermometer, Droplets, Wind, Sparkles, Plus, Shirt } from "lucide-react";
+import { Cloud, Sun, CloudRain, Snowflake, CloudLightning, Droplets, Wind, Sparkles, Plus, Shirt, MapPin } from "lucide-react";
 import GlassCard from "@/components/GlassCard";
 import GradientButton from "@/components/GradientButton";
+import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { useWeather } from "@/hooks/useWeather";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -12,13 +14,24 @@ const fadeUp = {
 };
 const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.08 } } };
 
+const weatherIcons: Record<string, typeof Cloud> = {
+  Clear: Sun, Clouds: Cloud, Rain: CloudRain, Drizzle: CloudRain,
+  Thunderstorm: CloudLightning, Snow: Snowflake,
+};
+
 const Dashboard = () => {
   const [userName, setUserName] = useState("");
+  const [itemCount, setItemCount] = useState(0);
   const navigate = useNavigate();
+  const { weather, loading: weatherLoading } = useWeather();
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) setUserName(user.email?.split("@")[0] || "");
+      if (user) {
+        setUserName(user.email?.split("@")[0] || "");
+        supabase.from("wardrobe_items").select("id", { count: "exact", head: true }).eq("user_id", user.id)
+          .then(({ count }) => setItemCount(count || 0));
+      }
     });
   }, []);
 
@@ -29,9 +42,10 @@ const Dashboard = () => {
     return "Good evening";
   };
 
+  const WeatherIcon = weather ? (weatherIcons[weather.condition] || Cloud) : Cloud;
+
   return (
     <motion.div initial="hidden" animate="show" variants={stagger}>
-      {/* Hero */}
       <motion.div variants={fadeUp} className="mb-8">
         <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl">
           {getGreeting()},{" "}
@@ -45,18 +59,36 @@ const Dashboard = () => {
         <motion.div variants={fadeUp}>
           <GlassCard className="p-6">
             <div className="relative z-10">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-medium uppercase tracking-tight text-muted-foreground">Current Weather</span>
-                <Cloud className="h-5 w-5 text-muted-foreground" strokeWidth={1.5} />
-              </div>
-              <div className="mt-4 flex items-end gap-2">
-                <span className="text-4xl font-bold tabular-nums">62°</span>
-                <span className="mb-1 text-sm text-muted-foreground">Overcast</span>
-              </div>
-              <div className="mt-4 flex gap-4 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1"><Droplets className="h-3 w-3" strokeWidth={1.5} /> 72%</span>
-                <span className="flex items-center gap-1"><Wind className="h-3 w-3" strokeWidth={1.5} /> 8 mph</span>
-              </div>
+              {weatherLoading ? (
+                <div className="space-y-3">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-10 w-32" />
+                  <Skeleton className="h-4 w-40" />
+                </div>
+              ) : weather ? (
+                <>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <MapPin className="h-3 w-3 text-muted-foreground" strokeWidth={1.5} />
+                      <span className="text-[10px] font-medium uppercase tracking-tight text-muted-foreground">{weather.city}</span>
+                    </div>
+                    <WeatherIcon className="h-5 w-5 text-muted-foreground" strokeWidth={1.5} />
+                  </div>
+                  <div className="mt-4 flex items-end gap-2">
+                    <span className="text-4xl font-bold tabular-nums">{weather.temp}°</span>
+                    <span className="mb-1 text-sm capitalize text-muted-foreground">{weather.description}</span>
+                  </div>
+                  <div className="mt-4 flex gap-4 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1"><Droplets className="h-3 w-3" strokeWidth={1.5} /> {weather.humidity}%</span>
+                    <span className="flex items-center gap-1"><Wind className="h-3 w-3" strokeWidth={1.5} /> {weather.wind_speed} mph</span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <span className="text-[10px] font-medium uppercase tracking-tight text-muted-foreground">Weather</span>
+                  <p className="mt-4 text-sm text-muted-foreground">Enable location to see weather</p>
+                </>
+              )}
             </div>
           </GlassCard>
         </motion.div>
@@ -69,14 +101,17 @@ const Dashboard = () => {
               <div className="mt-4 flex items-end gap-2">
                 <motion.span
                   className="text-4xl font-bold tabular-nums gradient-text"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
+                  key={itemCount}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
                 >
-                  0
+                  {itemCount}
                 </motion.span>
                 <span className="mb-1 text-sm text-muted-foreground">items</span>
               </div>
-              <p className="mt-3 text-xs text-muted-foreground">Upload your first item to get started</p>
+              <p className="mt-3 text-xs text-muted-foreground">
+                {itemCount === 0 ? "Upload your first item to get started" : "Your digital closet is growing"}
+              </p>
             </div>
           </GlassCard>
         </motion.div>
@@ -109,7 +144,7 @@ const Dashboard = () => {
                 <Plus className="mr-2 h-4 w-4" strokeWidth={1.5} />
                 Add Clothes
               </GradientButton>
-              <GradientButton size="lg" variant="outline" disabled>
+              <GradientButton size="lg" variant="outline" disabled={itemCount < 3}>
                 <Sparkles className="mr-2 h-4 w-4" strokeWidth={1.5} />
                 Generate Outfit
               </GradientButton>
