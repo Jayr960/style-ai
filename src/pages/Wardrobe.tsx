@@ -114,12 +114,30 @@ const Wardrobe = () => {
       });
 
       if (analysisError) throw analysisError;
-      setUploadProgress(90);
+      setUploadProgress(85);
+
+      let finalImageUrl = publicUrl;
+
+      // If the image isn't a clean product shot, generate one
+      if (analysis.is_product_shot === false) {
+        setUploadProgress(88);
+        toast({ title: "Enhancing image...", description: "Generating a clean product photo" });
+        
+        const { data: cleanupData, error: cleanupError } = await supabase.functions.invoke("cleanup-clothing-image", {
+          body: { imageBase64, mimeType: selectedFile.type, analysis, userId: user.id },
+        });
+
+        if (!cleanupError && cleanupData?.generated && cleanupData?.imageUrl) {
+          finalImageUrl = cleanupData.imageUrl;
+        }
+      }
+
+      setUploadProgress(92);
 
       // Save to database
       const { error: insertError } = await supabase.from("wardrobe_items").insert({
         user_id: user.id,
-        image_url: publicUrl,
+        image_url: finalImageUrl,
         item_type: analysis.type,
         color: analysis.color,
         style: analysis.style,
@@ -132,7 +150,7 @@ const Wardrobe = () => {
       if (insertError) throw insertError;
       setUploadProgress(100);
 
-      toast({ title: "Item added!", description: `${analysis.type} • ${analysis.color} • ${analysis.style}` });
+      toast({ title: "Item added!", description: `${analysis.type} • ${analysis.color} • ${analysis.style}${analysis.is_product_shot === false ? " (AI-enhanced image)" : ""}` });
       setShowUpload(false);
       setSelectedFile(null);
       setPreviewUrl(null);

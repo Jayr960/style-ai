@@ -87,8 +87,12 @@ serve(async (req) => {
                     items: { type: "string" },
                     description: "3-6 descriptive tags like basic, everyday, statement, layering, cozy, trendy",
                   },
+                  is_product_shot: {
+                    type: "boolean",
+                    description: "True if the image shows ONLY the clothing item isolated (flat lay, hanger, mannequin on plain background). False if someone is wearing it, it's in a lifestyle photo, or the background is busy/distracting.",
+                  },
                 },
-                required: ["type", "color", "style", "pattern", "season", "tags"],
+                required: ["type", "color", "style", "pattern", "season", "tags", "is_product_shot"],
                 additionalProperties: false,
               },
             },
