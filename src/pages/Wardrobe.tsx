@@ -273,8 +273,8 @@ const Wardrobe = () => {
               >
                 <GlassCard className="group relative overflow-hidden p-0">
                   <div className="relative z-10">
-                    <div className="aspect-square overflow-hidden rounded-t-2xl">
-                      <img src={item.image_url} alt={item.item_type || "clothing"} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                    <div className="aspect-square overflow-hidden rounded-t-2xl bg-secondary/50">
+                      <img src={item.image_url} alt={item.item_type || "clothing"} className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105" />
                     </div>
                     <div className="p-3">
                       <p className="text-sm font-medium capitalize">{item.item_type || "Unknown"}</p>
