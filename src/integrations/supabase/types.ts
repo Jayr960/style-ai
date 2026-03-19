@@ -21,6 +21,7 @@ export type Database = {
           id: string
           items: Json
           occasion: string | null
+          outfit_image_url: string | null
           outfit_name: string | null
           reasoning: string | null
           saved: boolean
@@ -32,6 +33,7 @@ export type Database = {
           id?: string
           items?: Json
           occasion?: string | null
+          outfit_image_url?: string | null
           outfit_name?: string | null
           reasoning?: string | null
           saved?: boolean
@@ -43,6 +45,7 @@ export type Database = {
           id?: string
           items?: Json
           occasion?: string | null
+          outfit_image_url?: string | null
           outfit_name?: string | null
           reasoning?: string | null
           saved?: boolean
@@ -92,6 +95,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_style_history: {
+        Row: {
+          colors: string[] | null
+          created_at: string
+          id: string
+          occasion: string | null
+          outfit_metadata: Json | null
+          outfit_tags: string[] | null
+          style_vibe: string | null
+          user_id: string
+        }
+        Insert: {
+          colors?: string[] | null
+          created_at?: string
+          id?: string
+          occasion?: string | null
+          outfit_metadata?: Json | null
+          outfit_tags?: string[] | null
+          style_vibe?: string | null
+          user_id: string
+        }
+        Update: {
+          colors?: string[] | null
+          created_at?: string
+          id?: string
+          occasion?: string | null
+          outfit_metadata?: Json | null
+          outfit_tags?: string[] | null
+          style_vibe?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       wardrobe_items: {
         Row: {
           ai_analysis: Json | null
@@ -133,6 +169,44 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      weekly_planner: {
+        Row: {
+          created_at: string
+          day_of_week: string
+          id: string
+          outfit_data: Json | null
+          outfit_id: string | null
+          user_id: string
+          week_start: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: string
+          id?: string
+          outfit_data?: Json | null
+          outfit_id?: string | null
+          user_id: string
+          week_start: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: string
+          id?: string
+          outfit_data?: Json | null
+          outfit_id?: string | null
+          user_id?: string
+          week_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_planner_outfit_id_fkey"
+            columns: ["outfit_id"]
+            isOneToOne: false
+            referencedRelation: "outfits"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
