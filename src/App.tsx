@@ -4,6 +4,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import ParticleBackground from "@/components/ParticleBackground";
+import AuroraBlobs from "@/components/AuroraBlobs";
+import CursorGlow from "@/components/CursorGlow";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import DashboardLayout from "./components/DashboardLayout";
@@ -21,7 +23,9 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <AuroraBlobs />
       <ParticleBackground />
+      <CursorGlow />
       <div className="noise-overlay" />
       <BrowserRouter>
         <Routes>
