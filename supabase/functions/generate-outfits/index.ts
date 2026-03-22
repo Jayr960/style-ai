@@ -88,7 +88,7 @@ CRITICAL RULES:
 1. You MUST ONLY use item IDs from the wardrobe list provided. Never invent or hallucinate item IDs.
 ${options.followWeather ? "2. Every outfit MUST be weather-appropriate. The reasoning MUST explicitly mention the current weather." : "2. DO NOT MENTION WEATHER at all. Pretend weather does not exist and focus completely on the design parameters."}
 3. Use the layering guidelines below — but only layer when it naturally makes sense for the style and weather.
-4. Avoid repeating the same item on consecutive days when possible.
+4. MAXIMUM VARIETY RULE: Do NOT use the exact same item in more than 2 outfits. You MUST utilize as many distinct items from the user's wardrobe as physically possible. Never just reuse the same 4 items!
 5. Each outfit should have 2-4 items that work well together.
 6. You MUST respond by calling the generate_weekly_outfits function.
 7. For each item in the outfit, specify its role (top, bottom, shoes, accessory, outerwear).
@@ -107,7 +107,7 @@ USER REQUESTED CONSTRAINTS:
 ${options.selectedOccasion ? `- Target Occasion: **${options.selectedOccasion}** (All outfits must strictly fit this occasion)` : ""}
 ${options.selectedVibe ? `- Style Vibe: **${options.selectedVibe}** (Adapt the pieces to fit this exact vibe)` : ""}
 ${options.selectedColor ? `- Color Mood: **${options.selectedColor}** (Rigorously restrict or focus the palette to fit this mood)` : ""}
-${!options.includeLayering ? `- NO LAYERING. Provide exactly one top piece per outfit. Do not include outerwear or overshirts.` : "- YOU MAY USE LAYERING following the rules if it stylistically fits."}
+${!options.includeLayering ? `- NO LAYERING. Provide exactly one top piece per outfit. Do not include outerwear or overshirts.` : "- STRICT LAYERING RULE: You MUST explicitly generate at least 4 outfits that feature multiple upper-body items (e.g. Base Layer + Outerwear). Do not be lazy and just output single-layer outfits for the whole week! You MUST build complex layered looks."}
 
 Create 7 unique outfits for the week using ONLY the item IDs listed above. Each outfit should be practical, stylish, and exactly follow the user's constraints. Include a catchy name, the occasion, and detailed reasoning mapping exactly to the chosen UI toggles. ${!options.followWeather ? "Again, DO NOT mention the weather, temperature, or seasons in your reasoning." : "Ensure your reasoning mentions the exact weather provided."}`;
 
@@ -154,7 +154,7 @@ Create 7 unique outfits for the week using ONLY the item IDs listed above. Each 
                           description: "Array of wardrobe items with their roles in this outfit",
                         },
                         occasion: { type: "string", description: "Best occasion for this outfit" },
-                        reasoning: { type: "string", description: "Detailed explanation mentioning weather, style, and why these items work together" },
+                        reasoning: { type: "string", description: options.followWeather ? "Detailed explanation mentioning weather, style, and why these items work together" : "Detailed explanation mentioning exact style and why these items work together. DO NOT MENTION WEATHER OR TEMPERATURE" },
                       },
                       required: ["day", "outfit_name", "items", "occasion", "reasoning"],
                       additionalProperties: false,
