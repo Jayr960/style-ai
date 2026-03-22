@@ -41,7 +41,12 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { wardrobeItems, weather, preferences, styleHistory } = await req.json();
+    const { wardrobeItems, weather, preferences, styleHistory, generationOptions } = await req.json();
+    
+    const options = generationOptions || {
+      followWeather: true, includeLayering: true, learnStyle: true,
+      selectedOccasion: null, selectedVibe: null, selectedColor: null
+    };
 
     if (!wardrobeItems || wardrobeItems.length < 3) {
       return new Response(JSON.stringify({ error: "You need at least 3 wardrobe items to generate outfits." }), {
@@ -57,7 +62,7 @@ serve(async (req) => {
       `- ID: ${item.id} | ${item.item_type} | ${item.color} | ${item.style} | ${item.pattern} | seasons: ${(item.season || []).join(", ")} | tags: ${(item.tags || []).join(", ")}`
     ).join("\n");
 
-    const weatherContext = weather
+    const weatherContext = (weather && options.followWeather)
       ? `CURRENT WEATHER (you MUST factor this into every outfit choice and mention it in reasoning):
 Temperature: ${weather.temp}°F (feels like ${weather.feels_like}°F)
 Condition: ${weather.description}
@@ -66,14 +71,14 @@ Wind: ${weather.wind_speed} mph
 City: ${weather.city}
 
 Example reasoning style: "It's ${weather.temp}°F and ${weather.description} in ${weather.city} today, so we picked [items] to keep you [warm/cool/dry/comfortable] and stylish."`
-      : "No weather data available. Assume moderate 65°F spring weather and mention that in reasoning.";
+      : "WEATHER CONTEXT: Ignore weather completely. Generate outfits based purely on style and the occasion.";
 
     const prefContext = preferences
       ? `User style preferences: vibes: ${(preferences.style_vibes || []).join(", ")}; preferred colors: ${(preferences.preferred_colors || []).join(", ")}; occasions: ${(preferences.occasions || []).join(", ")}.`
       : "";
 
     let styleHistoryContext = "";
-    if (styleHistory && styleHistory.length > 0) {
+    if (styleHistory && styleHistory.length > 0 && options.learnStyle) {
       const histSummary = styleHistory.map((h: any, i: number) =>
         `${i + 1}. Style: ${h.style_vibe || "N/A"} | Colors: ${(h.colors || []).join(", ")} | Occasion: ${h.occasion || "N/A"} | Tags: ${(h.outfit_tags || []).join(", ")}`
       ).join("\n");
@@ -82,6 +87,8 @@ PERSONAL STYLE HISTORY (the user's last ${styleHistory.length} saved outfits —
 ${histSummary}
 
 Use this history to personalize. If you notice patterns (e.g. user prefers minimalist fits with neutral colors), mention it: "Based on your recent style, you tend to prefer [pattern], so here's a look that matches that."`;
+    } else {
+      styleHistoryContext = "STYLE HISTORY: Do not bias the generation based on past history. Generate fresh new style perspectives.";
     }
 
     const systemPrompt = `You are a fashion stylist AI. Create 7 outfit combinations (one per day, Monday–Sunday) from the user's ACTUAL wardrobe items.
@@ -97,7 +104,21 @@ CRITICAL RULES:
 
 ${LAYERING_GUIDELINES}`;
 
-    const userPrompt = `Here are my wardrobe items:\n${itemsSummary}\n\n${weatherContext}\n\n${prefContext}\n${styleHistoryContext}\n\nCreate 7 unique outfits for the week using ONLY the item IDs listed above. Each outfit should be practical, stylish, and weather-appropriate. Include a catchy name, the best occasion, and detailed reasoning that mentions the weather.`;
+    const userPrompt = `Here are my wardrobe items:
+${itemsSummary}
+
+${weatherContext}
+
+${prefContext}
+${styleHistoryContext}
+
+USER REQUESTED CONSTRAINTS:
+${options.selectedOccasion ? `- Target Occasion: **${options.selectedOccasion}** (All outfits must strictly fit this occasion)` : ""}
+${options.selectedVibe ? `- Style Vibe: **${options.selectedVibe}** (Adapt the pieces to fit this exact vibe)` : ""}
+${options.selectedColor ? `- Color Mood: **${options.selectedColor}** (Rigorously restrict or focus the palette to fit this mood)` : ""}
+${!options.includeLayering ? `- NO LAYERING. Provide exactly one top piece per outfit. Do not include outerwear or overshirts.` : "- YOU MAY USE LAYERING following the rules if it stylistically fits."}
+
+Create 7 unique outfits for the week using ONLY the item IDs listed above. Each outfit should be practical, stylish, and exactly follow the user's constraints. Include a catchy name, the occasion, and detailed reasoning mapping exactly to the chosen UI toggles.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

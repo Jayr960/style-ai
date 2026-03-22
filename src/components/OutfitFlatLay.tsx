@@ -12,54 +12,58 @@ interface OutfitFlatLayProps {
   className?: string;
 }
 
-const roleOrder = ["outerwear", "top", "bottom", "shoes", "accessory"];
+// Helper to find the best item for a slot
+const extractSlot = (items: OutfitItem[], roles: string[]) => {
+  const item = items.find((i) => roles.includes(i.role?.toLowerCase() || ""));
+  if (item) return item;
+  // Fallback if no exact role matched but we have items left, though ideally roles are set
+  return null;
+};
 
 const OutfitFlatLay = ({ items, className = "" }: OutfitFlatLayProps) => {
-  // Sort items by role for consistent layout
-  const sorted = [...items].sort((a, b) => {
-    const ai = roleOrder.indexOf(a.role || "accessory");
-    const bi = roleOrder.indexOf(b.role || "accessory");
-    return ai - bi;
-  });
-
-  if (sorted.length === 0) {
+  if (items.length === 0) {
     return (
-      <div className={`flex aspect-[4/3] items-center justify-center bg-secondary/30 ${className}`}>
+      <div className={`flex aspect-[4/3] items-center justify-center bg-secondary/10 rounded-2xl ${className}`}>
         <p className="text-xs text-muted-foreground">No items</p>
       </div>
     );
   }
 
-  // Dynamic grid based on item count
-  const gridClass =
-    sorted.length <= 2
-      ? "grid-cols-2"
-      : sorted.length === 3
-      ? "grid-cols-3"
-      : "grid-cols-2 sm:grid-cols-4";
+  // Best effort slot mapping
+  const topItem = extractSlot(items, ["top", "outerwear"]) || items[0];
+  const bottomItem = extractSlot(items.filter(i => i !== topItem), ["bottom"]) || items[1];
+  const shoesItem = extractSlot(items.filter(i => i !== topItem && i !== bottomItem), ["shoes", "footwear"]) || items[2];
+  const accItem = extractSlot(items.filter(i => i !== topItem && i !== bottomItem && i !== shoesItem), ["accessory"]) || items[3];
+
+  const ItemCard = ({ item, customClass = "", delay = 0 }: { item: OutfitItem, customClass?: string, delay: number }) => {
+    if (!item) return <div className={`hidden sm:block rounded-2xl border border-dashed border-border/30 bg-white/30 ${customClass}`} />;
+    return (
+      <motion.div
+        className={`relative overflow-hidden rounded-[16px] border border-gray-200/60 bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_-4px_rgba(139,92,246,0.3)] ${customClass}`}
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      >
+        <img
+          src={item.image_url}
+          alt={item.item_type || "clothing item"}
+          className="h-full w-full object-contain p-4"
+        />
+        {(item.role || item.item_type) && (
+          <span className="absolute bottom-2 left-2 rounded-full bg-gradient-to-r from-violet to-coral px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-white shadow-sm">
+            {item.role || item.item_type || "ITEM"}
+          </span>
+        )}
+      </motion.div>
+    );
+  };
 
   return (
-    <div className={`grid ${gridClass} gap-2 bg-secondary/20 p-3 ${className}`}>
-      {sorted.map((item, i) => (
-        <motion.div
-          key={item.id}
-          className="relative overflow-hidden rounded-xl border border-border/30 bg-secondary/40 aspect-square"
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: i * 0.08, duration: 0.4, ease: [0.2, 0, 0, 1] }}
-        >
-          <img
-            src={item.image_url}
-            alt={item.item_type || "clothing"}
-            className="h-full w-full object-contain p-1"
-          />
-          {item.role && (
-            <span className="absolute bottom-1 left-1 rounded-md bg-background/80 px-1.5 py-0.5 text-[8px] font-medium uppercase tracking-wider text-muted-foreground backdrop-blur-sm">
-              {item.role}
-            </span>
-          )}
-        </motion.div>
-      ))}
+    <div className={`grid grid-cols-2 md:grid-cols-[2fr_2fr_1fr] md:grid-rows-2 gap-4 p-5 bg-[#fafafa]/50 ${className}`}>
+      <ItemCard item={topItem} customClass="md:col-start-1 md:col-end-2 md:row-start-1 md:row-end-3 aspect-[3/4] md:aspect-auto" delay={0.1} />
+      {bottomItem && <ItemCard item={bottomItem} customClass="md:col-start-2 md:col-end-3 md:row-start-1 md:row-end-3 aspect-[3/4] md:aspect-auto" delay={0.2} />}
+      {accItem && <ItemCard item={accItem} customClass="hidden md:block md:col-start-3 md:col-end-4 md:row-start-1 md:row-end-2" delay={0.3} />}
+      {shoesItem && <ItemCard item={shoesItem} customClass="col-span-2 md:col-span-1 md:col-start-3 md:col-end-4 md:row-start-2 md:row-end-3 aspect-[2/1] md:aspect-square" delay={0.4} />}
     </div>
   );
 };

@@ -45,7 +45,43 @@ interface GeneratedOutfit {
   reasoning: string;
 }
 
+import { Heart, Share, CloudRain, Sun } from "lucide-react";
+
+interface GenerationOptions {
+  followWeather: boolean;
+  includeLayering: boolean;
+  learnStyle: boolean;
+  selectedOccasion: string | null;
+  selectedVibe: string | null;
+  selectedColor: string | null;
+}
+
 const DAY_ORDER = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const OCCASIONS = ["Everyday", "Work / School", "Going Out", "Date Night", "Gym / Active", "Formal Event", "Chill / Lounge", "Travel"];
+const VIBES = ["Keep It Simple", "Make It Bold", "Street Ready", "Clean & Polished", "Cozy Mode", "Elevated Casual"];
+const COLORS = ["No Preference", "Neutrals Only", "Monochrome", "Earth Tones", "Bold & Bright", "Dark & Moody"];
+
+const CustomSwitch = ({ checked, onChange, label }: { checked: boolean, onChange: (c:boolean)=>void, label: string }) => (
+  <button onClick={() => onChange(!checked)} className="flex items-center justify-between w-full p-3 rounded-xl bg-secondary/20 hover:bg-secondary/40 transition-colors">
+    <span className="text-sm font-medium">{label}</span>
+    <div className={`w-11 h-6 rounded-full flex items-center px-1 transition-colors ${checked ? 'bg-violet' : 'bg-gray-200 dark:bg-gray-700'}`}>
+      <motion.div layout className="w-4 h-4 rounded-full bg-white shadow-sm" animate={{ x: checked ? 20 : 0 }} transition={{ type: "spring", stiffness: 500, damping: 30 }} />
+    </div>
+  </button>
+);
+
+const PillSelector = ({ options, selected, onSelect, label }: { options: string[], selected: string|null, onSelect: (o:string|null)=>void, label: string }) => (
+  <div className="mb-5">
+    <p className="text-[10px] text-muted-foreground mb-3 font-bold uppercase tracking-widest">{label}</p>
+    <div className="flex flex-wrap gap-2">
+      {options.map(opt => (
+        <button key={opt} onClick={() => onSelect(opt === selected ? null : opt)} className={`px-4 py-2 text-xs rounded-full transition-all duration-300 font-semibold ${opt === selected ? 'bg-gradient-to-r from-violet to-coral text-white shadow-[0_4px_14px_0_rgba(139,92,246,0.39)] hover:-translate-y-0.5' : 'bg-white border border-border/50 hover:border-violet/30 text-muted-foreground hover:text-foreground'}`}>
+          {opt}
+        </button>
+      ))}
+    </div>
+  </div>
+);
 
 const Outfits = () => {
   const [savedOutfits, setSavedOutfits] = useState<SavedOutfit[]>([]);
@@ -54,6 +90,13 @@ const Outfits = () => {
   const [loadingOutfits, setLoadingOutfits] = useState(true);
   const [itemCount, setItemCount] = useState(0);
   const { weather } = useWeather();
+
+  const [followWeather, setFollowWeather] = useState(true);
+  const [includeLayering, setIncludeLayering] = useState(true);
+  const [learnStyle, setLearnStyle] = useState(true);
+  const [selectedOccasion, setSelectedOccasion] = useState<string | null>(null);
+  const [selectedVibe, setSelectedVibe] = useState<string | null>(null);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
 
   const fetchAllData = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -125,7 +168,13 @@ const Outfits = () => {
       ]);
 
       const { data, error } = await supabase.functions.invoke("generate-outfits", {
-        body: { wardrobeItems, weather, preferences, styleHistory },
+        body: { 
+          wardrobeItems, 
+          weather, 
+          preferences, 
+          styleHistory,
+          generationOptions: { followWeather, includeLayering, learnStyle, selectedOccasion, selectedVibe, selectedColor } 
+        },
       });
 
       if (error) throw error;
@@ -246,8 +295,19 @@ const Outfits = () => {
     }).filter(Boolean);
   };
 
+  const renderWeatherChip = () => {
+    if (!weather) return null;
+    const isCold = weather.temp < 60;
+    return (
+      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400">
+        {isCold ? <CloudRain className="w-3.5 h-3.5" /> : <Sun className="w-3.5 h-3.5" />}
+        <span className="text-[10px] font-bold">{weather.temp}°F</span>
+      </div>
+    );
+  };
+
   return (
-    <motion.div initial="hidden" animate="show" variants={{ hidden: {}, show: { transition: { staggerChildren: 0.08 } } }}>
+    <motion.div initial="hidden" animate="show" variants={{ hidden: {}, show: { transition: { staggerChildren: 0.08 } } }} className="pb-24">
       <motion.div variants={fadeUp} className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tighter sm:text-3xl">
@@ -269,6 +329,26 @@ const Outfits = () => {
           )}
           {generating ? "Generating..." : savedOutfits.length > 0 ? "Regenerate" : "Generate Outfits"}
         </GradientButton>
+      </motion.div>
+
+      <motion.div variants={fadeUp} className="mt-8">
+        <GlassCard className="p-6 border-white/40 shadow-sm bg-white/40">
+          <div className="grid lg:grid-cols-[1fr_2fr] gap-8">
+            <div className="space-y-3">
+              <h3 className="text-sm font-bold tracking-tight">AI Settings</h3>
+              <div className="flex flex-col gap-2">
+                <CustomSwitch checked={followWeather} onChange={setFollowWeather} label="Follow the Weather" />
+                <CustomSwitch checked={includeLayering} onChange={setIncludeLayering} label="Include Layering" />
+                <CustomSwitch checked={learnStyle} onChange={setLearnStyle} label="Learn From My Style" />
+              </div>
+            </div>
+            <div>
+              <PillSelector label="Target Occasion" options={OCCASIONS} selected={selectedOccasion} onSelect={setSelectedOccasion} />
+              <PillSelector label="Vibe" options={VIBES} selected={selectedVibe} onSelect={setSelectedVibe} />
+              <PillSelector label="Color Mood" options={COLORS} selected={selectedColor} onSelect={setSelectedColor} />
+            </div>
+          </div>
+        </GlassCard>
       </motion.div>
 
       {generating && (
@@ -336,46 +416,55 @@ const Outfits = () => {
               const outfitItems = getOutfitItems(outfit);
 
               return (
-                <motion.div key={outfit.id} variants={fadeUp} layout>
-                  <GlassCard className="p-0 overflow-hidden">
+                <motion.div key={outfit.id} variants={fadeUp} layout className="mb-8 relative">
+                  <GlassCard className="p-0 overflow-hidden relative shadow-lg shadow-violet/5 border-white/60 bg-white/50">
                     <div className="relative z-10">
-                      <div className="flex items-center justify-between border-b border-border/50 px-5 py-3">
+                      
+                      <div className="flex items-center justify-between px-6 py-5">
+                        <div>
+                          <p className="text-xs font-bold text-violet uppercase tracking-widest mb-1">{day}</p>
+                          <h2 className="text-2xl font-black bg-gradient-to-br from-gray-900 to-gray-500 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">
+                            {outfit.outfit_name}
+                          </h2>
+                        </div>
                         <div className="flex items-center gap-3">
-                          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet/20 to-coral/10">
-                            <Calendar className="h-4 w-4 text-violet" strokeWidth={1.5} />
-                          </div>
-                          <div>
-                            <p className="text-sm font-semibold">{day}</p>
-                            <p className="text-xs text-muted-foreground">{outfit.outfit_name}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
+                          {renderWeatherChip()}
                           {outfit.occasion && (
-                            <Badge variant="secondary" className="text-[10px] bg-violet/10 text-violet border-violet/20">
-                              {outfit.occasion}
-                            </Badge>
+                            <div className="px-3 py-1 rounded-full bg-gradient-to-r from-violet to-coral shadow-sm">
+                              <span className="text-[10px] font-bold text-white uppercase tracking-wider">{outfit.occasion}</span>
+                            </div>
                           )}
-                          <button
-                            onClick={() => handleDeleteOutfit(outfit.id)}
-                            className="rounded-full p-1.5 bg-secondary text-muted-foreground hover:text-coral transition-colors active:scale-95"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" strokeWidth={1.5} />
-                          </button>
                         </div>
                       </div>
 
-                      {/* Flat-lay grid of real wardrobe photos */}
-                      {outfitItems.length > 0 ? (
-                        <OutfitFlatLay items={outfitItems as any} />
-                      ) : (
-                        <div className="flex aspect-[4/3] w-full items-center justify-center bg-secondary/30">
-                          <p className="text-xs text-muted-foreground">Some items may have been removed from your wardrobe</p>
-                        </div>
-                      )}
-
-                      <div className="border-t border-border/50 px-5 py-3">
-                        <p className="text-xs leading-relaxed text-muted-foreground">{outfit.reasoning}</p>
+                      {/* Asymmetric Editorial Grid */}
+                      <div className="px-2">
+                        {outfitItems.length > 0 ? (
+                          <OutfitFlatLay items={outfitItems as any} />
+                        ) : (
+                          <div className="flex aspect-[4/3] w-full items-center justify-center bg-secondary/30 rounded-2xl">
+                            <p className="text-xs text-muted-foreground">Some items may have been removed from your wardrobe</p>
+                          </div>
+                        )}
                       </div>
+
+                      <div className="mx-6 my-5 p-5 rounded-2xl bg-white/60 border-l-4 border-l-violet shadow-sm flex items-start gap-4">
+                        <Sparkles className="w-5 h-5 text-violet shrink-0 mt-0.5" />
+                        <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300 font-medium">{outfit.reasoning}</p>
+                      </div>
+
+                      <div className="px-6 py-4 bg-gray-50/50 border-t border-border/40 flex items-center gap-3 justify-end">
+                        <GradientButton size="sm" onClick={() => {}} className="rounded-full px-5 hover:shadow-lg hover:shadow-violet/20">
+                          <Heart className="w-4 h-4 mr-2" /> Save Outfit
+                        </GradientButton>
+                        <button onClick={() => handleDeleteOutfit(outfit.id)} className="flex items-center justify-center w-10 h-10 rounded-full bg-white border border-gray-200 text-gray-400 hover:text-coral hover:border-coral transition-colors">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                        <button className="flex items-center justify-center w-10 h-10 rounded-full bg-white border border-gray-200 text-gray-400 hover:text-blue-500 hover:border-blue-500 transition-colors">
+                          <Share className="w-4 h-4" />
+                        </button>
+                      </div>
+
                     </div>
                   </GlassCard>
                 </motion.div>
