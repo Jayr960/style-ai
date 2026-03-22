@@ -6,17 +6,35 @@ const corsHeaders = {
 };
 
 const LAYERING_GUIDELINES = `
-LAYERING RULES — Only layer when it naturally fits the style and weather. Not every outfit needs layers.
+LAYERING RULES — You must structure outfits exactly how real people get dressed.
 
-- Streetwear: Oversized hoodies under open flannels or bombers, graphic tees under zip-up jackets, baggy pants with layered socks above sneakers
-- Minimalist: Clean tonal layering — white tee under neutral crewneck, slim trousers with longline coat in same color family, no loud patterns
-- Casual: Relaxed layering — basic tee under unbuttoned overshirt or light jacket, straight leg jeans, simple sneakers
-- Preppy: Collar layering — polo or button-up under sweater vest or crewneck sweater, chinos, loafers or clean white sneakers
-- Boho: Flowy layering — flowy blouse under kimono or duster cardigan, wide leg pants or maxi skirt, sandals or ankle boots
-- Formal: Sharp layering — fitted dress shirt under blazer or suit jacket, tailored trousers, oxford shoes or heels
-- Sporty: Athletic layering — compression base layer under jersey or athletic tee, joggers or shorts with zip-up or track jacket
+1. MANDATORY BASE LAYERS:
+Certain items cannot be worn alone against the skin and ALWAYS require a base layer underneath them. Never generate an outfit with these items unless a valid base layer is also included:
+- Quarter zips — always need a t-shirt, long sleeve, or henley underneath
+- Hoodies — always need a t-shirt or long sleeve underneath
+- Zip-up jackets — always need a t-shirt, long sleeve, or hoodie underneath
+- Blazers — always need a shirt, t-shirt, or turtleneck underneath
+- Overshirts and flannels (worn open/as top layer) — always need a t-shirt underneath
+- Bombers and track jackets — always need a t-shirt or long sleeve underneath
+- Cardigans — always need a t-shirt, tank, or fitted top underneath
+- Suit jackets — always need a dress shirt or fitted top underneath
 
-When layering IS used, mention it in the reasoning naturally. When NOT layering, just describe the outfit without mentioning layering at all.
+2. BASE LAYER PRIORITY:
+When building an outfit that includes any of the items above, you MUST FIRST select a base layer from the user's wardrobe before adding the top layer. Choose stylistically appropriate basics (e.g. a white or neutral tee). Mention the base layer first in the outfit breakdown.
+
+3. WHEN LAYERING DOES NOT APPLY:
+Not every outfit needs layers. The following items are perfectly fine worn alone as the sole top piece:
+- T-shirts worn alone
+- Shirts and button-ups worn alone
+- Polos worn alone
+- Tank tops worn alone
+- Sweaters worn as the sole top layer
+- Dresses and jumpsuits
+- Crop tops
+Do not force layering onto these items unless the weather or specific style vibe strongly calls for it.
+
+4. HOW TO DESCRIBE IT:
+When an outfit includes layering, describe it naturally in the reasoning like a stylist would. Example: "We started with a clean white tee as your base and layered your grey quarter zip on top for that effortless put-together look." If there is no layering, just describe the outfit normally.
 `;
 
 serve(async (req) => {

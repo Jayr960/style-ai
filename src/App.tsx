@@ -16,32 +16,36 @@ import Planner from "./pages/Planner";
 import Shop from "./pages/Shop";
 import NotFound from "./pages/NotFound";
 
+import { ThemeProvider } from "@/components/ThemeProvider";
+
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <AuroraBlobs />
-      <ParticleBackground />
-      <CursorGlow />
-      <div className="noise-overlay" />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/dashboard" element={<DashboardLayout />}>
-            <Route index element={<Dashboard />} />
-            <Route path="wardrobe" element={<Wardrobe />} />
-            <Route path="outfits" element={<Outfits />} />
-            <Route path="planner" element={<Planner />} />
-            <Route path="shop" element={<Shop />} />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <AuroraBlobs />
+        <ParticleBackground />
+        <CursorGlow />
+        <div className="noise-overlay" />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/dashboard" element={<DashboardLayout />}>
+              <Route index element={<Dashboard />} />
+              <Route path="wardrobe" element={<Wardrobe />} />
+              <Route path="outfits" element={<Outfits />} />
+              <Route path="planner" element={<Planner />} />
+              <Route path="shop" element={<Shop />} />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 
