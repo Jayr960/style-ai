@@ -77,25 +77,16 @@ Example reasoning style: "It's ${weather.temp}°F and ${weather.description} in 
       ? `User style preferences: vibes: ${(preferences.style_vibes || []).join(", ")}; preferred colors: ${(preferences.preferred_colors || []).join(", ")}; occasions: ${(preferences.occasions || []).join(", ")}.`
       : "";
 
-    let styleHistoryContext = "";
-    if (styleHistory && styleHistory.length > 0 && options.learnStyle) {
-      const histSummary = styleHistory.map((h: any, i: number) =>
-        `${i + 1}. Style: ${h.style_vibe || "N/A"} | Colors: ${(h.colors || []).join(", ")} | Occasion: ${h.occasion || "N/A"} | Tags: ${(h.outfit_tags || []).join(", ")}`
-      ).join("\n");
-      styleHistoryContext = `
+    const styleHistoryContext = (styleHistory && styleHistory.length > 0 && options.learnStyle) ? `
 PERSONAL STYLE HISTORY (the user's last ${styleHistory.length} saved outfits — learn from these patterns):
-${histSummary}
-
-Use this history to personalize. If you notice patterns (e.g. user prefers minimalist fits with neutral colors), mention it: "Based on your recent style, you tend to prefer [pattern], so here's a look that matches that."`;
-    } else {
-      styleHistoryContext = "STYLE HISTORY: Do not bias the generation based on past history. Generate fresh new style perspectives.";
-    }
+${styleHistory.map((h: any, i: number) => `${i + 1}. Style: ${h.style_vibe || "N/A"} | Colors: ${(h.colors || []).join(", ")} | Occasion: ${h.occasion || "N/A"} | Tags: ${(h.outfit_tags || []).join(", ")}`).join("\n")}
+Use this history to personalize. If you notice patterns, mention it: "Based on your recent style, you tend to prefer [pattern], so here's a look that matches that."` : "STYLE HISTORY: Do not bias the generation based on past history. Generate fresh new style perspectives.";
 
     const systemPrompt = `You are a fashion stylist AI. Create 7 outfit combinations (one per day, Monday–Sunday) from the user's ACTUAL wardrobe items.
 
 CRITICAL RULES:
 1. You MUST ONLY use item IDs from the wardrobe list provided. Never invent or hallucinate item IDs.
-2. Every outfit MUST be weather-appropriate. The reasoning MUST explicitly mention the current weather.
+${options.followWeather ? "2. Every outfit MUST be weather-appropriate. The reasoning MUST explicitly mention the current weather." : "2. DO NOT MENTION WEATHER at all. Pretend weather does not exist and focus completely on the design parameters."}
 3. Use the layering guidelines below — but only layer when it naturally makes sense for the style and weather.
 4. Avoid repeating the same item on consecutive days when possible.
 5. Each outfit should have 2-4 items that work well together.
@@ -118,7 +109,8 @@ ${options.selectedVibe ? `- Style Vibe: **${options.selectedVibe}** (Adapt the p
 ${options.selectedColor ? `- Color Mood: **${options.selectedColor}** (Rigorously restrict or focus the palette to fit this mood)` : ""}
 ${!options.includeLayering ? `- NO LAYERING. Provide exactly one top piece per outfit. Do not include outerwear or overshirts.` : "- YOU MAY USE LAYERING following the rules if it stylistically fits."}
 
-Create 7 unique outfits for the week using ONLY the item IDs listed above. Each outfit should be practical, stylish, and exactly follow the user's constraints. Include a catchy name, the occasion, and detailed reasoning mapping exactly to the chosen UI toggles.`;
+Create 7 unique outfits for the week using ONLY the item IDs listed above. Each outfit should be practical, stylish, and exactly follow the user's constraints. Include a catchy name, the occasion, and detailed reasoning mapping exactly to the chosen UI toggles. ${!options.followWeather ? "Again, DO NOT mention the weather, temperature, or seasons in your reasoning." : "Ensure your reasoning mentions the exact weather provided."}`;
+
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
