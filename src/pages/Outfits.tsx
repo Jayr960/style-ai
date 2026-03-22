@@ -45,7 +45,7 @@ interface GeneratedOutfit {
   reasoning: string;
 }
 
-import { Heart, Share, CloudRain, Sun } from "lucide-react";
+import { Heart, Share, CloudRain, Sun, Shirt } from "lucide-react";
 
 interface GenerationOptions {
   followWeather: boolean;
@@ -205,7 +205,7 @@ const Outfits = () => {
           outfit_name: outfit.outfit_name,
           items: itemsData,
           occasion: outfit.occasion,
-          reasoning: outfit.reasoning,
+          reasoning: typeof outfit.reasoning === 'object' ? JSON.stringify(outfit.reasoning) : outfit.reasoning,
           date: targetDate.toISOString().split("T")[0],
           saved: true,
         }).select().single();
@@ -222,7 +222,7 @@ const Outfits = () => {
             outfit_data: {
               outfit_name: outfit.outfit_name,
               occasion: outfit.occasion,
-              reasoning: outfit.reasoning,
+              reasoning: typeof outfit.reasoning === 'object' ? JSON.stringify(outfit.reasoning) : outfit.reasoning,
               items: itemsData,
             },
             week_start: weekStart,
@@ -240,7 +240,7 @@ const Outfits = () => {
             style_vibe: styleVibe,
             colors: colors as string[],
             occasion: outfit.occasion,
-            outfit_metadata: { outfit_name: outfit.outfit_name, item_ids: outfit.item_ids, reasoning: outfit.reasoning },
+            outfit_metadata: { outfit_name: outfit.outfit_name, item_ids: outfit.item_ids, reasoning: typeof outfit.reasoning === 'object' ? JSON.stringify(outfit.reasoning) : outfit.reasoning },
           });
         }
       }
@@ -296,7 +296,7 @@ const Outfits = () => {
   };
 
   const renderWeatherChip = () => {
-    if (!weather) return null;
+    if (!weather || !followWeather) return null;
     const isCold = weather.temp < 60;
     return (
       <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400">
@@ -304,6 +304,17 @@ const Outfits = () => {
         <span className="text-[10px] font-bold">{weather.temp}°F</span>
       </div>
     );
+  };
+
+  const parseReasoning = (reasoningStr: string | null | any): { why?: string, styling_tips?: string[] } | string | null => {
+    if (!reasoningStr) return null;
+    if (typeof reasoningStr === 'object') return reasoningStr;
+    try {
+      if (reasoningStr.startsWith('{')) {
+        return JSON.parse(reasoningStr);
+      }
+    } catch (e) {}
+    return reasoningStr;
   };
 
   return (
@@ -448,10 +459,46 @@ const Outfits = () => {
                         )}
                       </div>
 
-                      <div className="mx-6 my-5 p-5 rounded-2xl bg-white/60 border-l-4 border-l-violet shadow-sm flex items-start gap-4">
-                        <Sparkles className="w-5 h-5 text-violet shrink-0 mt-0.5" />
-                        <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300 font-medium">{outfit.reasoning}</p>
-                      </div>
+                      {(() => {
+                        const r = parseReasoning(outfit.reasoning);
+                        if (!r) return null;
+                        
+                        if (typeof r === 'object' && r.why) {
+                          return (
+                            <div className="mx-6 my-4 p-5 rounded-2xl bg-white/70 border border-gray-100 flex flex-col md:flex-row gap-5 divide-y md:divide-y-0 md:divide-x divide-purple-100 shadow-sm">
+                              <div className="flex-1 md:pr-2">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <Sparkles className="w-4 h-4 text-violet" />
+                                  <h4 className="text-[11px] font-bold text-gray-900 uppercase tracking-widest">Why We Picked This</h4>
+                                </div>
+                                <p className="text-[13px] text-gray-600 leading-relaxed font-medium">{r.why}</p>
+                              </div>
+                              <div className="flex-1 md:pl-5 pt-4 md:pt-0">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <Shirt className="w-4 h-4 text-coral" />
+                                  <h4 className="text-[11px] font-bold text-gray-900 uppercase tracking-widest">How to Style It</h4>
+                                </div>
+                                <ul className="text-[12px] text-gray-600 font-medium space-y-1.5">
+                                  {(r.styling_tips || []).map((tip: string, idx: number) => (
+                                    <li key={idx} className="flex items-start gap-2">
+                                      <span className="text-[14px] text-coral leading-none mt-0.5">•</span>
+                                      <span className="leading-snug">{tip}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        // Fallback for old simple string descriptions
+                        return (
+                          <div className="mx-6 my-5 p-5 rounded-2xl bg-white/60 border-l-4 border-l-violet shadow-sm flex items-start gap-4">
+                            <Sparkles className="w-5 h-5 text-violet shrink-0 mt-0.5" />
+                            <p className="text-sm leading-relaxed text-gray-700 font-medium">{typeof r === 'string' ? r : String(r)}</p>
+                          </div>
+                        );
+                      })()}
 
                       <div className="px-6 py-4 bg-gray-50/50 border-t border-border/40 flex items-center gap-3 justify-end">
                         <GradientButton size="sm" onClick={() => {}} className="rounded-full px-5 hover:shadow-lg hover:shadow-violet/20">

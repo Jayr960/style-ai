@@ -109,7 +109,7 @@ ${options.selectedVibe ? `- Style Vibe: **${options.selectedVibe}** (Adapt the p
 ${options.selectedColor ? `- Color Mood: **${options.selectedColor}** (Rigorously restrict or focus the palette to fit this mood)` : ""}
 ${!options.includeLayering ? `- NO LAYERING. Provide exactly one top piece per outfit. Do not include outerwear or overshirts.` : "- STRICT LAYERING RULE: You MUST explicitly generate at least 4 outfits that feature multiple upper-body items (e.g. Base Layer + Outerwear). Do not be lazy and just output single-layer outfits for the whole week! You MUST build complex layered looks."}
 
-Create 7 unique outfits for the week using ONLY the item IDs listed above. Each outfit should be practical, stylish, and exactly follow the user's constraints. Include a catchy name, the occasion, and detailed reasoning mapping exactly to the chosen UI toggles. ${!options.followWeather ? "Again, DO NOT mention the weather, temperature, or seasons in your reasoning." : "Ensure your reasoning mentions the exact weather provided."}`;
+Create 7 unique outfits for the week using ONLY the item IDs listed above. Each outfit should be practical, stylish, and exactly follow the user's constraints. Include a catchy name, the occasion, and detailed structural reasoning mapping exactly to the chosen UI toggles. ${!options.followWeather ? "Again, DO NOT mention the weather, temperature, or seasons in your reasoning." : "Ensure your reasoning mentions the exact weather provided."} The 'reasoning' object MUST have 'why' and 'styling_tips' per the schema.`;
 
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -154,7 +154,20 @@ Create 7 unique outfits for the week using ONLY the item IDs listed above. Each 
                           description: "Array of wardrobe items with their roles in this outfit",
                         },
                         occasion: { type: "string", description: "Best occasion for this outfit" },
-                        reasoning: { type: "string", description: options.followWeather ? "Detailed explanation mentioning weather, style, and why these items work together" : "Detailed explanation mentioning exact style and why these items work together. DO NOT MENTION WEATHER OR TEMPERATURE" },
+                        reasoning: { 
+                          type: "object", 
+                          description: "Structural advice breakdown.",
+                          properties: {
+                            why: { type: "string", description: options.followWeather ? "One single short sentence maximum explaining why this outfit was chosen based on style and occasion. Include exact weather reference." : "One single short sentence maximum explaining why this outfit was chosen based on style and occasion. DO NOT MENTION WEATHER." },
+                            styling_tips: { 
+                              type: "array", 
+                              items: { type: "string" }, 
+                              description: "Two to three very short practical styling tips for the outfit. Each bullet should be one sentence max." 
+                            }
+                          },
+                          required: ["why", "styling_tips"],
+                          additionalProperties: false
+                        },
                       },
                       required: ["day", "outfit_name", "items", "occasion", "reasoning"],
                       additionalProperties: false,
