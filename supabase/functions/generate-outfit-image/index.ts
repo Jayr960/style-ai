@@ -44,9 +44,13 @@ serve(async (req) => {
     const imageBytes = Uint8Array.from(atob(base64Data), (c) => c.charCodeAt(0));
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
-    // Because we are authenticating server-side, it's safer to use service role or just the anon key + user token.
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || Deno.env.get("SUPABASE_ANON_KEY") || "";
-    const supabaseClient = createClient(supabaseUrl, supabaseKey);
+    
+    // Crucial: We must pass the user's Auth exact JWT token forward to bypass RLS properly if service_role fails or doesn't exist.
+    const authHeader = req.headers.get("Authorization");
+    const supabaseClient = createClient(supabaseUrl, supabaseKey, {
+      global: { headers: { Authorization: authHeader || "" } },
+    });
 
     const fileName = `${outfitId}/${crypto.randomUUID()}.png`;
 

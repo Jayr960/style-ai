@@ -68,7 +68,7 @@ function OutfitGeneratedImage({ outfit, items }: { outfit: any; items: any[] }) 
         else throw new Error("No URL returned");
       } catch (err: any) {
         console.error("Flat lay generation failed:", err);
-        setError("Failed to generate styled flat-lay image.");
+        setError(err.message || "Failed to generate styled flat-lay image.");
       } finally {
         setGenerating(false);
       }
